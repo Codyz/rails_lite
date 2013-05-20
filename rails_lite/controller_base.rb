@@ -1,5 +1,6 @@
 require 'json'
 require_relative './cookies.rb'
+require 'active_support/core_ext'
 
 
 class ControllerBase
@@ -16,9 +17,9 @@ class ControllerBase
     unless @response_built
       @response_built = true
       @res.content_type = body_type
-      self.session.[]=("content_type", body_type)
+      self.session["content_type"] = body_type
       @res.body = content
-      self.session.[]=("body", content)
+      self.session["body"] = content
       self.session.store_session(@res)
     end
   end
@@ -38,6 +39,15 @@ class ControllerBase
     else
       @session = Session.new(@req)
     end
+  end
+
+  def render(view)
+    folder = self.class.to_s.underscore.gsub!("_controller", "")
+    final_path = "views/#{folder}/#{view}.html.erb"
+    read_view = File.read(final_path)
+    template = ERB.new(read_view).result(binding)
+    p template
+    render_content(template, "text/html")
   end
 
 end
